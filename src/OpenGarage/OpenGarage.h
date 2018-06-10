@@ -25,7 +25,7 @@
 
 #include <Arduino.h>
 #include <FS.h>
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 #include <Ticker.h>
 #include "defines.h"
 

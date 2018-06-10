@@ -36,10 +36,9 @@
 #define HTML_UPLOAD_FAILED     0x40
 #define HTML_REDIRECT_HOME     0xFF
 
-#include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
-#include <ESP8266mDNS.h>
-#include <ESP8266HTTPClient.h>
+#include <WiFi.h>
+#include <mdns.h>
+#include <HTTPClient.h>
 #include <WiFiUdp.h>
 #include <time.h>
 #include "defines.h"

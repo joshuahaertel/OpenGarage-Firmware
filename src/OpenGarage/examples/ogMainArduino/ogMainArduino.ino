@@ -20,14 +20,14 @@
  * <http://www.gnu.org/licenses/>.
  */
 #include "lwip/tcp_impl.h" // losing bytes work around
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 #include <ESP8266WebServer.h>
-#include <ESP8266mDNS.h>
+#include <mdns.h>
 #include <WiFiUdp.h>
 #include <time.h>
 #include <FS.h>
 
-#include <OpenGarage.h>
+#include "../../OpenGarage.h"
 
 void tcpCleanup()   // losing bytes work around
 {  while(tcp_tw_pcbs!=NULL)
