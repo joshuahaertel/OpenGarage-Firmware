@@ -50,9 +50,7 @@
 #define OG_SWITCH_LOW   0x02
 #define OG_SWITCH_HIGH  0x03
 
-#define OG_ALM_NONE     0x00
 #define OG_ALM_5        0x01
-#define OG_ALM_10       0x02
 
 #define OG_MOD_AP       0xA9
 #define OG_MOD_STA      0x2A
@@ -62,11 +60,8 @@
 #define OG_AUTO_CLOSE   0x02
 
 //Automation Option C - Notify settings
-#define OG_NOTIFY_NONE  0x00
 #define OG_NOTIFY_DO    0x01
 #define OG_NOTIFY_DC    0x02
-#define OG_NOTIFY_VL    0x04
-#define OG_NOTIFY_VA    0x08
 
 #define OG_STATE_INITIAL        0
 #define OG_STATE_CONNECTING     1
@@ -76,7 +71,6 @@
 #define OG_STATE_RESET          9
 
 #define BLYNK_PIN_LED   V0
-#define BLYNK_PIN_RELAY V1
 #define BLYNK_PIN_LCD   V2
 #define BLYNK_PIN_DIST  V3
 #define BLYNK_PIN_IP    V5
