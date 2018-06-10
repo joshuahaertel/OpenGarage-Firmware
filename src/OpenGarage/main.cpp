@@ -28,21 +28,21 @@
 #include <BlynkSimpleEsp8266.h>
 #include <DNSServer.h>
 #include <PubSubClient.h> //https://github.com/Imroy/pubsubclient
+#include <WebServer.h>
+#include <Update.h>
+#include <ESPmDNS.h>
 
 #include "pitches.h"
 #include "OpenGarage.h"
 #include "espconnect.h"
 
 OpenGarage og;
-ESP8266WebServer *server = NULL;
-WiFiServer serv;
-serv,
-DNSServer *dns = NULL;
+WebServer *server = NULL;
+DNSServer *dns = nullptr;
 
 WidgetLED blynk_led(BLYNK_PIN_LED);
 WidgetLCD blynk_lcd(BLYNK_PIN_LCD);
 
-static Ticker led_ticker;
 static Ticker aux_ticker;
 static Ticker ip_ticker;
 static Ticker restart_ticker;
@@ -624,7 +624,7 @@ void do_setup()
   curr_cloud_access_en = og.get_cloud_access_en();
   curr_mode = og.get_mode();
   if(!server) {
-    server = new ESP8266WebServer(og.options[OPTION_HTP].ival);
+    server = new WebServer(og.options[OPTION_HTP].ival);
     if(curr_mode == OG_MOD_AP) dns = new DNSServer();
     DEBUG_PRINT(F("server started @ "));
     DEBUG_PRINTLN(og.options[OPTION_HTP].ival);
@@ -710,7 +710,8 @@ void on_sta_upload_fin() {
 
   if(!verify_device_key()) {
     server_send_result(HTML_UNAUTHORIZED);
-    Update.reset();
+//    Update.reset();
+      Update.end();
     return;
   }
 
