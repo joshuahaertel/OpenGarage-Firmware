@@ -19,9 +19,7 @@
  * along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-#include "lwip/tcp_impl.h" // losing bytes work around
 #include <WiFi.h>
-#include <ESP8266WebServer.h>
 #include <mdns.h>
 #include <WiFiUdp.h>
 #include <time.h>
@@ -29,18 +27,15 @@
 
 #include "../../OpenGarage.h"
 
-void tcpCleanup()   // losing bytes work around
-{  while(tcp_tw_pcbs!=NULL)
-  {    tcp_abort(tcp_tw_pcbs);  }}
-  
+
 void do_setup();
+
 void do_loop();
 
 void setup() {
-  do_setup();
+    do_setup();
 }
 
 void loop() {
-  do_loop();
-  tcpCleanup();       
+    do_loop();
 }
