@@ -48,5 +48,4 @@ OpenGarage/html/ap_home.html
 CMakeListsPrivate.txt
 .idea/
 cmake-build-debug/
-CMakeListsPrivate.txt
 lib/*
