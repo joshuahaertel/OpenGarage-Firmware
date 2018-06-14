@@ -46,3 +46,7 @@ OpenGarage/html/ap_home.html
 .pioenvs
 .piolibdeps
 CMakeListsPrivate.txt
+.idea/
+cmake-build-debug/
+CMakeListsPrivate.txt
+lib/*
