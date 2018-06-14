@@ -746,7 +746,7 @@ void on_sta_upload() {
         mqttclient.disconnect();
         DEBUG_PRINT(F("prepare to upload: "));
         DEBUG_PRINTLN(upload.filename);
-        uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+        uint32_t maxSketchSpace = UPDATE_SIZE_UNKNOWN;  // (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
         if (!Update.begin(maxSketchSpace)) {
             DEBUG_PRINTLN(F("not enough space"));
         }
@@ -772,7 +772,7 @@ void on_ap_upload() {
     if (upload.status == UPLOAD_FILE_START) {
         Serial.println(F("prepare to upload: "));
         Serial.println(upload.filename);
-        uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+        uint32_t maxSketchSpace = UPDATE_SIZE_UNKNOWN;  // (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
         if (!Update.begin(maxSketchSpace)) {
             Serial.println(F("not enough space"));
         }
