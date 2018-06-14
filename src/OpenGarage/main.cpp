@@ -37,7 +37,7 @@
 #include "espconnect.h"
 
 OpenGarage og;
-WebServer *server = NULL;
+WebServer *server = nullptr;
 DNSServer *dns = nullptr;
 
 WidgetLED blynk_led(BLYNK_PIN_LED);
@@ -213,7 +213,7 @@ String get_ap_ssid() {
 String get_ip() {
   String ip = "";
   IPAddress _ip = WiFi.localIP();
-  ip = _ip[0];
+  ip += _ip[0];
   ip += ".";
   ip += _ip[1];
   ip += ".";
@@ -241,7 +241,7 @@ void on_sta_controller() {
   html += F("\",\"mac\":\"");
   html += get_mac();
   html += F("\",\"cid\":");
-  html += ESP.getChipId();
+  html += String((unsigned long) ESP.getEfuseMac());
   html += F(",\"rssi\":");
   html += (int16_t)WiFi.RSSI();
   html += F("}");
@@ -260,7 +260,7 @@ void on_sta_debug() {
   html += F("\",\"mac\":\"");
   html += get_mac();
   html += F("\",\"cid\":");
-  html += ESP.getChipId();
+  html += String((unsigned long) ESP.getEfuseMac());
   html += F(",\"rssi\":");
   html += (int16_t)WiFi.RSSI();
   html += F(",\"bssid\":\"");
@@ -573,17 +573,13 @@ void mqtt_callback(const MQTT::Publish& pub) {
   //Accept button on any topic for backwards compat with existing code - use IN messages below if possible
   if (pub.payload_string() == "Button") {
     DEBUG_PRINTLN(F("MQTT Button request received, change door state"));
-    if(!og.options[OPTION_ALM].ival) {
-      // if alarm is not enabled, trigger relay right away
-      og.click_relay();
-    }
-	  else {
-      // else, set alarm
-      og.set_alarm();
-    }
+    void (*func)() = !og.options[OPTION_ALM].ival ? og.click_relay : (void()) og.set_alarm;
+    func();
   }
   //Accept click for consistency with api, open and close should be used instead, use IN topic if possible
-  if (pub.topic() == og.options[OPTION_NAME].sval +"/IN/STATE" ){
+    String topic = og.options[OPTION_NAME].sval;
+    topic += "/IN/STATE";
+  if (pub.topic() == topic){
     DEBUG_PRINT(F("MQTT IN Message detected, check data for action, Data:"));
     DEBUG_PRINTLN(pub.payload_string());
     if ( (pub.payload_string() == "close" && door_status) || (pub.payload_string() == "open" && !door_status) || pub.payload_string() == "click") {
@@ -732,7 +728,7 @@ void on_sta_upload() {
   HTTPUpload& upload = server->upload();
   if(upload.status == UPLOAD_FILE_START){
     DEBUG_PRINTLN(F("Stopping all network clients"));
-    WiFiUDP::stopAll();
+//    WiFiUDP::stopAll();
     Blynk.disconnect(); // disconnect Blynk during firmware upload
     mqttclient.disconnect();
     DEBUG_PRINT(F("prepare to upload: "));
@@ -802,7 +798,9 @@ bool mqtt_connect_subscibe() {
       if (mqttclient.connect(og.options[OPTION_NAME].sval)) {
         mqttclient.set_callback(mqtt_callback);
         mqttclient.subscribe(og.options[OPTION_NAME].sval);
-        mqttclient.subscribe(og.options[OPTION_NAME].sval +"/IN/#");
+          String inTopic = og.options[OPTION_NAME].sval;
+          inTopic += "/IN/#";
+          mqttclient.subscribe(inTopic);
         DEBUG_PRINTLN(F("......Success, Subscribed to MQTT Topic"));
         return true;
       }else {
@@ -826,9 +824,14 @@ void perform_notify(String s) {
   // IFTTT notification
   if(og.options[OPTION_IFTT].sval.length()>7) { // key size is at least 8
     DEBUG_PRINTLN(" Sending IFTTT Notification");
-    http.begin("http://maker.ifttt.com/trigger/opengarage/with/key/"+og.options[OPTION_IFTT].sval);
+      String address = "http://maker.ifttt.com/trigger/opengarage/with/key/";
+      address += og.options[OPTION_IFTT].sval;
+      http.begin(address);
     http.addHeader("Content-Type", "application/json");
-    http.POST("{\"value1\":\""+s+"\"}");
+      String data = R"({"value1":")";
+      data += s;
+      data += "\"}";
+      http.POST(data);
     String payload = http.getString();
     http.end();
     if(payload.indexOf("Congratulations") >= 0) {
@@ -843,7 +846,9 @@ void perform_notify(String s) {
   if(og.options[OPTION_MQTT].sval.length()>8) {
     if (mqttclient.connected()) {
         DEBUG_PRINTLN(" Sending MQTT Notification");
-        mqttclient.publish(og.options[OPTION_NAME].sval + "/OUT/NOTIFY",s);
+        String topic = og.options[OPTION_NAME].sval;
+        topic += "/OUT/NOTIFY";
+        mqttclient.publish(topic, s);
     }
   }
 }
@@ -857,83 +862,90 @@ void process_dynamics(byte event) {
     justopen_timestamp = 0;
     return;
   }
+  String &optionName = og.options[OPTION_NAME].sval;
   if(event == DOOR_STATUS_JUST_OPENED) {
-    justopen_timestamp = curr_utc_time; // record time stamp
-    if (noto & OG_NOTIFY_DO)
-      { perform_notify(og.options[OPTION_NAME].sval + " just OPENED!");}
-
-    //If the door is set to auto close at a certain hour, ensure if manually opened it doesn't autoshut
-    if( (curr_utc_hour == og.options[OPTION_ATIB].ival) && (!automationclose_triggered) ){
-      DEBUG_PRINTLN(" Door opened during automation hour, set to not auto-close ");
-      automationclose_triggered=true;
-    }
-
+      justopen_timestamp = curr_utc_time;  // record time stamp
+      if (noto & OG_NOTIFY_DO) {
+          String message = optionName;
+          message += " just OPENED!";
+          perform_notify(message);
+      }
+      //If the door is set to auto close at a certain hour, ensure if manually opened it doesn't autoshut
+      if( (curr_utc_hour == og.options[OPTION_ATIB].ival) && (!automationclose_triggered) ) {
+          DEBUG_PRINTLN(" Door opened during automation hour, set to not auto-close ");
+          automationclose_triggered=true;
+      }
   } else if (event == DOOR_STATUS_JUST_CLOSED) {
-    justopen_timestamp = 0; // reset time stamp
-    if (noto & OG_NOTIFY_DC)
-      { perform_notify(og.options[OPTION_NAME].sval + " just CLOSED!");}
-
+      justopen_timestamp = 0; // reset time stamp
+      if (noto & OG_NOTIFY_DC) {
+          optionName += " just CLOSED!";
+          perform_notify(optionName);
+      }
   } else if (event == DOOR_STATUS_REMAIN_OPEN) {
-    if (!justopen_timestamp) justopen_timestamp = curr_utc_time; // record time stamp
-    else {
-      if(curr_utc_time > justopen_timestamp + (ulong)og.options[OPTION_ATI].ival*60L) {
-        // reached timeout, perform action
-        if(ato & OG_AUTO_NOTIFY) {
-          // send notification
-          String s = og.options[OPTION_NAME].sval+" is left open for more than ";
-          s+= og.options[OPTION_ATI].ival;
-          s+= " minutes.";
-          if(ato & OG_AUTO_CLOSE) {
-            s+= " It will be auto-closed shortly";
-          } else {
-            s+= " This is a reminder for you.";
+      if (!justopen_timestamp) {
+          justopen_timestamp = curr_utc_time; // record time stamp
+      } else {
+          if(curr_utc_time > justopen_timestamp + (ulong)og.options[OPTION_ATI].ival*60L) {
+              // reached timeout, perform action
+              if(ato & OG_AUTO_NOTIFY) {
+                  // send notification
+                  String s = optionName;
+                  s += " is left open for more than ";
+                  s += og.options[OPTION_ATI].ival;
+                  s += " minutes.";
+                  if(ato & OG_AUTO_CLOSE) {
+                      s += " It will be auto-closed shortly";
+                  } else {
+                      s += " This is a reminder for you.";
+                  }
+                  perform_notify(s);
+              }
+              if(ato & OG_AUTO_CLOSE) {
+                  // auto close door
+                  // alarm is mandatory in auto-close
+                  if(!og.options[OPTION_ALM].ival) { 
+                      og.set_alarm(OG_ALM_5); 
+                  } else { 
+                      og.set_alarm(); 
+                  }
+              }
+              justopen_timestamp = 0;
           }
-          perform_notify(s);
-        }
-        if(ato & OG_AUTO_CLOSE) {
-          // auto close door
-          // alarm is mandatory in auto-close
-          if(!og.options[OPTION_ALM].ival) { og.set_alarm(OG_ALM_5); }
-          else { og.set_alarm(); }
-        }
-        justopen_timestamp = 0;
-      }
-
-      if(( curr_utc_hour == og.options[OPTION_ATIB].ival) && (!automationclose_triggered)) {
-        // still open past time, perform action
-        DEBUG_PRINTLN("Door is open at specified close time and automation not yet triggered: ");
-        automationclose_triggered=true;
-        if(atob & OG_AUTO_NOTIFY) {
-          // send notification
-          String s = og.options[OPTION_NAME].sval+" is open after ";
-          s+= og.options[OPTION_ATIB].ival;
-          s+= " UTC. Current hour:";
-          s+= curr_utc_hour;
-          if(atob & OG_AUTO_CLOSE) {
-            s+= " It will be auto-closed shortly";
-          } else {
-            s+= " This is a reminder for you.";
+          if(( curr_utc_hour == og.options[OPTION_ATIB].ival) && (!automationclose_triggered)) {
+              // still open past time, perform action
+              DEBUG_PRINTLN("Door is open at specified close time and automation not yet triggered: ");
+              automationclose_triggered=true;
+              if(atob & OG_AUTO_NOTIFY) {
+                  // send notification
+                  String s = optionName;
+                  s += " is open after ";
+                  s += og.options[OPTION_ATIB].ival;
+                  s += " UTC. Current hour:";
+                  s += curr_utc_hour;
+                  if(atob & OG_AUTO_CLOSE) {
+                      s += " It will be auto-closed shortly";
+                  } else {
+                      s += " This is a reminder for you.";
+                  }
+                  perform_notify(s);
+              }
+              if(atob & OG_AUTO_CLOSE) {
+                  // auto close door
+                  // alarm is mandatory in auto-close
+                  if(!og.options[OPTION_ALM].ival) {
+                      og.set_alarm(OG_ALM_5); 
+                  } else {
+                      og.set_alarm();
+                  }
+              }
+              justopen_timestamp = 0;
+          } else if ((curr_utc_hour > og.options[OPTION_ATIB].ival) && (automationclose_triggered)) {
+              DEBUG_PRINTLN("Unlocking automation close function");
+              automationclose_triggered=false;  //Unlock the hour after the setting
           }
-          perform_notify(s);
-        }
-        if(atob & OG_AUTO_CLOSE) {
-          // auto close door
-          // alarm is mandatory in auto-close
-          if(!og.options[OPTION_ALM].ival) { og.set_alarm(OG_ALM_5); }
-          else {
-            og.set_alarm();
-          }
-        }
-        justopen_timestamp = 0;
       }
-      else if ((curr_utc_hour > og.options[OPTION_ATIB].ival) && (automationclose_triggered))
-      {
-        DEBUG_PRINTLN("Unlocking automation close function");
-        automationclose_triggered=false; //Unlock the hour after the setting
-      }
-    }
   } else {
-    justopen_timestamp = 0;
+      justopen_timestamp = 0;
   }
 }
 
@@ -1080,7 +1092,8 @@ void check_status() {
         blynk_lcd.print(0, 0, get_ip());
         String str = ":";
         str += og.options[OPTION_HTP].ival;
-        str += " " + get_ap_ssid();
+        str += " ";
+        str += get_ap_ssid();
         blynk_lcd.print(0, 1, str);
       }
 
@@ -1090,12 +1103,16 @@ void check_status() {
       if((og.options[OPTION_MQTT].sval.length()>8) && (mqttclient.connected())) {
         DEBUG_PRINTLN(F(" Update MQTT (State Refresh)"));
         if(door_status == DOOR_STATUS_REMAIN_OPEN)  {						// MQTT: If door open...
-          mqttclient.publish(og.options[OPTION_NAME].sval + "/OUT/STATE","OPEN");
+            String topic = og.options[OPTION_NAME].sval;
+            topic += "/OUT/STATE";
+            mqttclient.publish(topic, "OPEN");
           mqttclient.publish(og.options[OPTION_NAME].sval,"Open"); //Support existing mqtt code
           //DEBUG_PRINTLN(curr_utc_time + " Sending MQTT State otification: OPEN");
         }
         else if(door_status == DOOR_STATUS_REMAIN_CLOSED) {					// MQTT: If door closed...
-          mqttclient.publish(og.options[OPTION_NAME].sval + "/OUT/STATE","CLOSED");
+            String topic = og.options[OPTION_NAME].sval;
+            topic += "/OUT/STATE";
+            mqttclient.publish(topic, "CLOSED");
           mqttclient.publish(og.options[OPTION_NAME].sval,"Closed"); //Support existing mqtt code
           //DEBUG_PRINTLN(curr_utc_time + " Sending MQTT State Notification: CLOSED");
         }
