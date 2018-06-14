@@ -87,32 +87,32 @@
 #define DOOR_STATUS_MIXED         4
 
 typedef enum {
-  OPTION_FWV = 0, // firmware version
-  OPTION_MNT,     // mount type
-  OPTION_DTH,     // distance threshold door
-  OPTION_VTH,     // distance threshold vehicle detection
-  OPTION_RIV,     // read interval
-  OPTION_ALM,     // alarm mode
-  OPTION_HTP,     // http port
-  OPTION_CDT,     // click delay time
-  OPTION_MOD,     // mode
-  OPTION_ATI,     // automation interval (in minutes)
-  OPTION_ATO,     // automation options
-  OPTION_ATIB,    // automation interval B (in hours)
-  OPTION_ATOB,    // automation options B
-  OPTION_NOTO,    // notification options
-  OPTION_USI,     // use static IP
-  OPTION_SSID,    // wifi ssid
-  OPTION_PASS,    // wifi password
-  OPTION_AUTH,    // Blynk authentication token
-  OPTION_DKEY,    // device key
-  OPTION_NAME,    // device name
-  OPTION_IFTT,    // IFTTT token
-  OPTION_MQTT,    // MQTT IP
-  OPTION_DVIP,    // device IP
-  OPTION_GWIP,    // gateway IP
-  OPTION_SUBN,    // subnet
-  NUM_OPTIONS     // number of options
+    OPTION_FWV = 0, // firmware version
+    OPTION_MNT,     // mount type
+    OPTION_DTH,     // distance threshold door
+    OPTION_VTH,     // distance threshold vehicle detection
+    OPTION_RIV,     // read interval
+    OPTION_ALM,     // alarm mode
+    OPTION_HTP,     // http port
+    OPTION_CDT,     // click delay time
+    OPTION_MOD,     // mode
+    OPTION_ATI,     // automation interval (in minutes)
+    OPTION_ATO,     // automation options
+    OPTION_ATIB,    // automation interval B (in hours)
+    OPTION_ATOB,    // automation options B
+    OPTION_NOTO,    // notification options
+    OPTION_USI,     // use static IP
+    OPTION_SSID,    // wifi ssid
+    OPTION_PASS,    // wifi password
+    OPTION_AUTH,    // Blynk authentication token
+    OPTION_DKEY,    // device key
+    OPTION_NAME,    // device name
+    OPTION_IFTT,    // IFTTT token
+    OPTION_MQTT,    // MQTT IP
+    OPTION_DVIP,    // device IP
+    OPTION_GWIP,    // gateway IP
+    OPTION_SUBN,    // subnet
+    NUM_OPTIONS     // number of options
 } OG_OPTION_enum;
 
 // if button is pressed for 1 seconds, report IP
@@ -131,20 +131,20 @@ typedef enum {
 //#define SERIAL_DEBUG
 #if defined(SERIAL_DEBUG)
 
-  #define DEBUG_BEGIN(x)   { Serial.begin(x); }
-  #define DEBUG_PRINT(x)   Serial.print(x)
-  #define DEBUG_PRINTLN(x) Serial.println(x)
+#define DEBUG_BEGIN(x)   { Serial.begin(x); }
+#define DEBUG_PRINT(x)   Serial.print(x)
+#define DEBUG_PRINTLN(x) Serial.println(x)
 
 #else
 
-  #define DEBUG_BEGIN(x)   { Serial.begin(x); }
-  #define DEBUG_PRINT(x)   {}
-  #define DEBUG_PRINTLN(x) {}
+#define DEBUG_BEGIN(x)   { Serial.begin(x); }
+#define DEBUG_PRINT(x)   {}
+#define DEBUG_PRINTLN(x) {}
 
 #endif
 
 typedef unsigned char byte;
 typedef unsigned long ulong;
-typedef unsigned int  uint;
+typedef unsigned int uint;
 
 #endif  // _DEFINES_H

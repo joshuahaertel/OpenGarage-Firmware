@@ -20,12 +20,6 @@
  * <http://www.gnu.org/licenses/>.
  */
 #include <WiFi.h>
-#include <mdns.h>
-#include <WiFiUdp.h>
-#include <time.h>
-#include <FS.h>
-
-#include "../../OpenGarage.h"
 
 
 void do_setup();
