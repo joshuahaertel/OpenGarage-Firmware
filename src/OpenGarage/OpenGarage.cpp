@@ -45,7 +45,7 @@ OptionStruct OpenGarage::options[] = {
         {"riv",  5,              300,   ""},
         {"alm",  OG_ALM_5,       2,     ""},
         {"htp",  80,             65535, ""},
-        {"cdt",  1000,           5000,  ""},
+        {"cdt",  0xFF,           5000,  ""},
         {"mod",  OG_MOD_AP,      255,   ""},
         {"ati",  30,             720,   ""},
         {"ato",  OG_AUTO_NONE,   255,   ""},
@@ -155,7 +155,6 @@ void OpenGarage::begin() {
 }
 
 void OpenGarage::options_setup() {
-    int i;
     if (!SPIFFS.exists(config_fname)) { // if config file does not exist
         options_save(); // save default option values
         return;
@@ -333,12 +332,13 @@ bool OpenGarage::read_log_end() {
 }
 
 void OpenGarage::play_note(uint freq) {
-    if (freq > 0) {
-        analogWrite(PIN_BUZZER, 512);
-        analogWriteFreq(freq);
-    } else {
-        analogWrite(PIN_BUZZER, 0);
-    }
+    // Ignore for now
+//    if (freq > 0) {
+//        analogWrite(PIN_BUZZER, 512);
+//        analogWriteFreq(freq);
+//    } else {
+//        analogWrite(PIN_BUZZER, 0);
+//    }
 }
 
 void OpenGarage::config_ip() {

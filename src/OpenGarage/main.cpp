@@ -25,7 +25,7 @@
 #define BLYNK_PRINT Serial
 #endif
 
-#include <BlynkSimpleEsp8266.h>
+#include <BlynkSimpleEsp32.h>
 #include <DNSServer.h>
 #include <PubSubClient.h> //https://github.com/Imroy/pubsubclient
 #include <WebServer.h>
@@ -589,8 +589,13 @@ void mqtt_callback(const MQTT::Publish &pub) {
     //Accept button on any topic for backwards compat with existing code - use IN messages below if possible
     if (pub.payload_string() == "Button") {
         DEBUG_PRINTLN(F("MQTT Button request received, change door state"));
-        void (*func)() = !og.options[OPTION_ALM].ival ? og.click_relay : (void()) og.set_alarm;
-        func();
+        if(!og.options[OPTION_ALM].ival) {
+            // if alarm is not enabled, trigger relay right away
+            og.click_relay();
+        } else {
+            // else, set alarm
+            og.set_alarm();
+        }
     }
     //Accept click for consistency with api, open and close should be used instead, use IN topic if possible
     String topic = og.options[OPTION_NAME].sval;
